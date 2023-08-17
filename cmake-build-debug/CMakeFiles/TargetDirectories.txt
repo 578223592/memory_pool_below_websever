@@ -1,0 +1,3 @@
+/home/swx/2023_project/memory_pool/cmake-build-debug/CMakeFiles/memory_pool.dir
+/home/swx/2023_project/memory_pool/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/swx/2023_project/memory_pool/cmake-build-debug/CMakeFiles/rebuild_cache.dir
