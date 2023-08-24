@@ -23,6 +23,6 @@ void test01(){
 }
 int main() {
     std::cout << "Hello, World!" << std::endl;
-
+    test01();
     return 0;
 }

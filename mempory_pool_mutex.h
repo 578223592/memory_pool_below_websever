@@ -1,9 +1,9 @@
 //
 // Created by swx on 23-8-17.
 //
-
 #ifndef MEMORY_POOL_MEMPORY_POOL_MUTEX_H
 #define MEMORY_POOL_MEMPORY_POOL_MUTEX_H
+
 #include <mutex>
 #include <shared_mutex>
 
@@ -11,15 +11,17 @@
 #define  BlockSize 4096
 
 
-struct Slot{
+struct Slot {
     Slot *next;
 };
-class MemoryPool{
+
+class MemoryPool {
 public:
     MemoryPool();
+
     ~MemoryPool();
 
-    Slot* allocate();
+    Slot *allocate();
 
 
     void deAllocate(Slot *pSlot);
@@ -42,76 +44,41 @@ private:
 //    size_t padPointer(char *addr,size_t alignSize);
 };
 
-//implement
-MemoryPool& get_MemoryPool(size_t slotIndex){
-    static MemoryPool memoryPool_[64];   //todo：单例设计模式
-    return memoryPool_[slotIndex];
-}
+MemoryPool &get_MemoryPool(size_t slotIndex);
 
 
-void* use_Memory(size_t size);
-void free_Memory(size_t size,void *addr);
+void *use_Memory(size_t size);
 
-    template<typename T, typename... Args>
-    T *newElement(Args &&... args) {
-        T *p = nullptr;
-        p = reinterpret_cast<T *>(use_Memory(sizeof(T)));   //todo 完美转发
-        if (p == nullptr) {
-            return p;
-        } else {
+void free_Memory(size_t size, void *addr);
+
+template<typename T, typename... Args>
+T *newElement(Args &&... args) {
+    T *p = nullptr;
+    p = reinterpret_cast<T *>(use_Memory(sizeof(T)));   //todo 完美转发
+    if (p == nullptr) {
+        return p;
+    } else {
 //        plain new
-            return new(p) T(std::forward<Args>(args)...);
-        }
+        return new(p) T(std::forward<Args>(args)...);
     }
+}
 
 // 调⽤p的析构函数，然后将其总内存池中释放
-    template<typename T>
-    void deleteElement(T *p) {
-        if (p == nullptr) {
-            return;
-        }
-        p->~T(); //析构
-        free_Memory(sizeof(T), reinterpret_cast<void *>(p));;
+template<typename T>
+void deleteElement(T *p) {
+    if (p == nullptr) {
+        return;
     }
-
-
-    void init_MemoryPool(){
-        for(int i = 0;i<64;++i){
-            get_MemoryPool(i).init((i+1)<<3);
-        }
-    }
-
-
-
-
-
-void *use_Memory(size_t size) {
-    if(size == 0){
-        return nullptr;
-    }
-    if(size > 512){
-        return operator new(size);
-    }
-    // 相当于(size / 8)向上取整,即 1~8字节-》0槽；9~16字节-》1槽；17~24字节-》2槽
-//    简单总结过后公式显然是(size-1)/8 ，所以随想录中的反而搞得复杂，然后槽 8 16 24 32
-    size_t memoryPoolIndex = (size-1)/8;
-    MemoryPool& memoryPool = get_MemoryPool(memoryPoolIndex);
-    return reinterpret_cast<void *>(memoryPool.allocate());
+    p->~T(); //析构
+    free_Memory(sizeof(T), reinterpret_cast<void *>(p));;
 }
 
-void free_Memory(size_t size, void *addr) {
-    if(size==0 || addr == nullptr){
-        return ;
-    }
-    if(size > 512){
-        operator delete(addr);
-    }
-    //同use_Memory
-    size_t memoryPoolIndex = (size-1)/8;
-    MemoryPool& memoryPool = get_MemoryPool(memoryPoolIndex);
-    memoryPool.deAllocate(reinterpret_cast<Slot*>(addr));
-    return ;
 
-}
+void init_MemoryPool();
+
+
+void *use_Memory(size_t size) ;
+
+void free_Memory(size_t size, void *addr) ;
 
 #endif //MEMORY_POOL_MEMPORY_POOL_MUTEX_H
